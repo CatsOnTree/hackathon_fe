@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   CalendarDays,
   ClipboardCheck,
@@ -13,21 +13,52 @@ import {
   Users,
   UserRoundCheck,
   UserSearch,
-} from 'lucide-react';
-import { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+} from "lucide-react";
+import { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { useHasRole } from "../utils/roleGuard";
 
-const navItems = [
-  { label: 'Dashboard', to: '/', icon: Gauge },
-  { label: 'Events', to: '/events', icon: CalendarDays },
-  { label: 'Registration', to: '/registration', icon: QrCode },
-  { label: 'Participants', to: '/participants', icon: Users },
-  { label: 'Attendance', to: '/attendance', icon: ClipboardCheck },
-  { label: 'Panelists', to: '/panelists', icon: UserSearch },
-  { label: 'Assignments', to: '/assignments', icon: UserRoundCheck },
-  { label: 'Feedback', to: '/feedback', icon: MessageSquare },
-  { label: 'Squads', to: '/squads', icon: Network },
-  { label: 'Email Logs', to: '/email-logs', icon: Mail },
+const allNavItems = [
+  {
+    label: "Dashboard",
+    to: "/",
+    icon: Gauge,
+    roles: ["ADMIN"],
+  },
+  { label: "Events", to: "/events", icon: CalendarDays, roles: ["ADMIN"] },
+  {
+    label: "Registration",
+    to: "/registration",
+    icon: QrCode,
+    roles: ["ADMIN"],
+  },
+  {
+    label: "Participants",
+    to: "/participants",
+    icon: Users,
+    roles: ["ADMIN", "PANELIST"],
+  },
+  {
+    label: "Attendance",
+    to: "/attendance",
+    icon: ClipboardCheck,
+    roles: ["ADMIN", "PANELIST"],
+  },
+  { label: "Panelists", to: "/panelists", icon: UserSearch, roles: ["ADMIN"] },
+  {
+    label: "Assignments",
+    to: "/assignments",
+    icon: UserRoundCheck,
+    roles: ["ADMIN"],
+  },
+  {
+    label: "Feedback",
+    to: "/feedback",
+    icon: MessageSquare,
+    roles: ["ADMIN", "PANELIST"],
+  },
+  { label: "Squads", to: "/squads", icon: Network, roles: ["ADMIN"] },
+  { label: "Email Logs", to: "/email-logs", icon: Mail, roles: [] },
 ];
 
 export function MainLayout() {
@@ -35,33 +66,55 @@ export function MainLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { role, logout } = useAuth();
-  const crumb = navItems.find((item) => item.to === location.pathname)?.label || 'Dashboard';
+
+  // Filter navigation items based on user role
+  const getFilteredNavItems = () => {
+    const normalizeRole = (r?: string | null) => r?.replace(/^ROLE_/, "") || "";
+    const normalizedRole = normalizeRole(role);
+
+    return allNavItems.filter((item) =>
+      item.roles.map(normalizeRole).includes(normalizedRole),
+    );
+  };
+
+  const navItems = getFilteredNavItems();
+  const crumb =
+    allNavItems.find((item) => item.to === location.pathname)?.label ||
+    "Dashboard";
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   const getRoleDisplay = () => {
     const roleMap: Record<string, string> = {
-      ADMIN: 'Admin',
-      PANELIST: 'Panelist',
-      PARTICIPANT: 'Participant',
-      ROLE_ADMIN: 'Admin',
-      ROLE_PANELIST: 'Panelist',
+      ADMIN: "Admin",
+      PANELIST: "Panelist",
+      PARTICIPANT: "Participant",
+      ROLE_ADMIN: "Admin",
+      ROLE_PANELIST: "Panelist",
     };
-    return roleMap[role || ''] || role || 'User';
+    return roleMap[role || ""] || role || "User";
   };
 
   return (
     <div className="min-h-screen bg-zinc-100">
-      <aside className={`fixed inset-y-0 left-0 z-40 w-72 border-r border-zinc-200 bg-zinc-950 text-white transition lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 w-72 border-r border-zinc-200 bg-zinc-950 text-white transition lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
+      >
         <div className="flex h-16 items-center justify-between px-5">
           <div>
-            <p className="text-sm font-semibold text-emerald-300">AI Recruitment</p>
+            <p className="text-sm font-semibold text-emerald-300">
+              AI Recruitment
+            </p>
             <p className="text-xs text-zinc-400">Event Platform</p>
           </div>
-          <button className="rounded-md p-2 text-zinc-300 hover:bg-zinc-800 lg:hidden" onClick={() => setOpen(false)} aria-label="Close menu">
+          <button
+            className="rounded-md p-2 text-zinc-300 hover:bg-zinc-800 lg:hidden"
+            onClick={() => setOpen(false)}
+            aria-label="Close menu"
+          >
             <PanelLeftClose className="h-5 w-5" />
           </button>
         </div>
@@ -73,7 +126,9 @@ export function MainLayout() {
               onClick={() => setOpen(false)}
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition ${
-                  isActive ? 'bg-emerald-500 text-zinc-950' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'
+                  isActive
+                    ? "bg-emerald-500 text-zinc-950"
+                    : "text-zinc-300 hover:bg-zinc-800 hover:text-white"
                 }`
               }
             >
@@ -84,12 +139,22 @@ export function MainLayout() {
         </nav>
       </aside>
 
-      {open ? <button className="fixed inset-0 z-30 bg-zinc-950/30 lg:hidden" onClick={() => setOpen(false)} aria-label="Close menu overlay" /> : null}
+      {open ? (
+        <button
+          className="fixed inset-0 z-30 bg-zinc-950/30 lg:hidden"
+          onClick={() => setOpen(false)}
+          aria-label="Close menu overlay"
+        />
+      ) : null}
 
       <div className="lg:pl-72">
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-zinc-200 bg-white/95 px-4 backdrop-blur sm:px-6">
           <div className="flex items-center gap-3">
-            <button className="btn-secondary h-9 w-9 p-0 lg:hidden" onClick={() => setOpen(true)} aria-label="Open menu">
+            <button
+              className="btn-secondary h-9 w-9 p-0 lg:hidden"
+              onClick={() => setOpen(true)}
+              aria-label="Open menu"
+            >
               <Menu className="h-4 w-4" />
             </button>
             <div>
@@ -99,7 +164,9 @@ export function MainLayout() {
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3 rounded-full border border-zinc-200 bg-zinc-50 py-1 pl-1 pr-3">
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-emerald-600 text-sm font-bold text-white">{getRoleDisplay().charAt(0)}</span>
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-emerald-600 text-sm font-bold text-white">
+                {getRoleDisplay().charAt(0)}
+              </span>
               <div className="hidden text-sm sm:inline">
                 <p className="font-medium text-zinc-700">{getRoleDisplay()}</p>
                 <p className="text-xs text-zinc-500">Event Manager</p>

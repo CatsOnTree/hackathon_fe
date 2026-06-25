@@ -14,6 +14,26 @@ import { SquadsPage } from "../pages/Squads/SquadsPage";
 import { EmailLogsPage } from "../pages/EmailLogs/EmailLogsPage";
 import { useAuth } from "../contexts/AuthContext";
 
+function normalizeRole(role?: string | null) {
+  return role?.replace(/^ROLE_/, "") || "";
+}
+
+function useCanAccessRoute(requiredRoles: string[]): boolean {
+  const { role } = useAuth();
+  const normalizedRole = normalizeRole(role);
+  return normalizedRole
+    ? requiredRoles.map(normalizeRole).includes(normalizedRole)
+    : false;
+}
+
+function ProtectedRoute({
+  component: Component,
+  requiredRoles,
+  fallback = <Navigate to="/" replace />,
+}: any) {
+  return useCanAccessRoute(requiredRoles) ? <Component /> : fallback;
+}
+
 export function AppRoutes() {
   const { isAuthenticated } = useAuth();
 
@@ -27,15 +47,87 @@ export function AppRoutes() {
       {isAuthenticated ? (
         <Route element={<MainLayout />}>
           <Route index element={<DashboardPage />} />
-          <Route path="events" element={<EventsPage />} />
-          <Route path="registration" element={<RegistrationPage />} />
-          <Route path="participants" element={<ParticipantsPage />} />
-          <Route path="attendance" element={<AttendancePage />} />
-          <Route path="panelists" element={<PanelistsPage />} />
-          <Route path="assignments" element={<AssignmentsPage />} />
-          <Route path="feedback" element={<FeedbackPage />} />
-          <Route path="squads" element={<SquadsPage />} />
-          <Route path="email-logs" element={<EmailLogsPage />} />
+          <Route
+            path="events"
+            element={
+              <ProtectedRoute
+                component={EventsPage}
+                requiredRoles={["ADMIN"]}
+              />
+            }
+          />
+          <Route
+            path="registration"
+            element={
+              <ProtectedRoute
+                component={RegistrationPage}
+                requiredRoles={["ADMIN"]}
+              />
+            }
+          />
+          <Route
+            path="participants"
+            element={
+              <ProtectedRoute
+                component={ParticipantsPage}
+                requiredRoles={["ADMIN", "PANELIST"]}
+              />
+            }
+          />
+          <Route
+            path="attendance"
+            element={
+              <ProtectedRoute
+                component={AttendancePage}
+                requiredRoles={["ADMIN", "PANELIST"]}
+              />
+            }
+          />
+          <Route
+            path="panelists"
+            element={
+              <ProtectedRoute
+                component={PanelistsPage}
+                requiredRoles={["ADMIN"]}
+              />
+            }
+          />
+          <Route
+            path="assignments"
+            element={
+              <ProtectedRoute
+                component={AssignmentsPage}
+                requiredRoles={["ADMIN"]}
+              />
+            }
+          />
+          <Route
+            path="feedback"
+            element={
+              <ProtectedRoute
+                component={FeedbackPage}
+                requiredRoles={["ADMIN", "PANELIST"]}
+              />
+            }
+          />
+          <Route
+            path="squads"
+            element={
+              <ProtectedRoute
+                component={SquadsPage}
+                requiredRoles={["ADMIN"]}
+              />
+            }
+          />
+          <Route
+            path="email-logs"
+            element={
+              <ProtectedRoute
+                component={EmailLogsPage}
+                requiredRoles={["ADMIN"]}
+              />
+            }
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       ) : (

@@ -1,5 +1,5 @@
-import { useAuth } from '../contexts/AuthContext';
-import type { ReactNode } from 'react';
+import { useAuth } from "../contexts/AuthContext";
+import type { ReactNode } from "react";
 
 interface RoleGuardProps {
   children: ReactNode;
@@ -13,10 +13,14 @@ interface RoleGuardProps {
  * @param fallback - what to show if user doesn't have required role (default: null)
  */
 function normalizeRole(role?: string | null) {
-  return role?.replace(/^ROLE_/, '') || '';
+  return role?.replace(/^ROLE_/, "") || "";
 }
 
-export function RoleGuard({ children, requiredRoles = [], fallback = null }: RoleGuardProps) {
+export function RoleGuard({
+  children,
+  requiredRoles = [],
+  fallback = null,
+}: RoleGuardProps) {
   const { role } = useAuth();
   const normalizedRole = normalizeRole(role);
 
@@ -24,7 +28,10 @@ export function RoleGuard({ children, requiredRoles = [], fallback = null }: Rol
     return children; // No restriction
   }
 
-  if (!normalizedRole || !requiredRoles.map(normalizeRole).includes(normalizedRole)) {
+  if (
+    !normalizedRole ||
+    !requiredRoles.map(normalizeRole).includes(normalizedRole)
+  ) {
     return fallback;
   }
 
@@ -37,7 +44,9 @@ export function RoleGuard({ children, requiredRoles = [], fallback = null }: Rol
 export function useHasRole(...roles: string[]): boolean {
   const { role } = useAuth();
   const normalizedRole = normalizeRole(role);
-  return normalizedRole ? roles.map(normalizeRole).includes(normalizedRole) : false;
+  return normalizedRole
+    ? roles.map(normalizeRole).includes(normalizedRole)
+    : false;
 }
 
 /**
@@ -48,44 +57,44 @@ export function useCanAccess(featureName: string): boolean {
 
   const roleFeatureMap: Record<string, string[]> = {
     // Dashboard
-    viewDashboard: ['ADMIN', 'PANELIST', 'PARTICIPANT'],
+    viewDashboard: ["ADMIN", "PARTICIPANT"],
 
     // Events
-    viewEvents: ['ADMIN', 'PANELIST'],
-    createEvent: ['ADMIN'],
-    editEvent: ['ADMIN'],
-    deleteEvent: ['ADMIN'],
+    viewEvents: ["ADMIN"],
+    createEvent: ["ADMIN"],
+    editEvent: ["ADMIN"],
+    deleteEvent: ["ADMIN"],
 
     // Registration
-    registerParticipant: ['PARTICIPANT'],
-    viewRegistration: ['ADMIN', 'PANELIST', 'PARTICIPANT'],
+    registerParticipant: ["PARTICIPANT"],
+    viewRegistration: ["ADMIN", "PARTICIPANT"],
 
-    // Participants
-    viewParticipants: ['ADMIN', 'PANELIST'],
-    editParticipant: ['ADMIN'],
+    // Participants - PANELIST can view and edit
+    viewParticipants: ["ADMIN", "PANELIST"],
+    editParticipant: ["ADMIN", "PANELIST"],
 
-    // Attendance
-    checkIn: ['PARTICIPANT'],
-    viewAttendance: ['ADMIN', 'PANELIST'],
+    // Attendance - PANELIST can view and check in
+    checkIn: ["ADMIN", "PANELIST"],
+    viewAttendance: ["ADMIN", "PANELIST"],
 
     // Panelists
-    viewPanelists: ['ADMIN', 'PANELIST'],
-    createPanelist: ['ADMIN'],
+    viewPanelists: ["ADMIN"],
+    createPanelist: ["ADMIN"],
 
     // Assignments
-    viewAssignments: ['ADMIN', 'PANELIST'],
-    createAssignment: ['ADMIN'],
+    viewAssignments: ["ADMIN"],
+    createAssignment: ["ADMIN"],
 
-    // Feedback
-    viewFeedback: ['ADMIN', 'PANELIST'],
-    submitFeedback: ['PANELIST'],
+    // Feedback - PANELIST can view and submit
+    viewFeedback: ["ADMIN", "PANELIST"],
+    submitFeedback: ["PANELIST"],
 
     // Squads
-    viewSquads: ['ADMIN', 'PANELIST'],
-    createSquad: ['ADMIN'],
+    viewSquads: ["ADMIN"],
+    createSquad: ["ADMIN"],
 
     // Email Logs
-    viewEmailLogs: ['ADMIN'],
+    viewEmailLogs: ["ADMIN"],
   };
 
   const requiredRoles = roleFeatureMap[featureName] || [];
@@ -105,5 +114,8 @@ export function getAccessDeniedMessage(featureName: string): string {
     viewEmailLogs: "Only admins can view email logs",
   };
 
-  return messageMap[featureName] || "You don't have permission to access this feature";
+  return (
+    messageMap[featureName] ||
+    "You don't have permission to access this feature"
+  );
 }
