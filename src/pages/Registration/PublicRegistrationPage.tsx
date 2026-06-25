@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import { UserPlus, AlertCircle, CheckCircle } from "lucide-react";
 import { FileDropzone } from "../../components/forms/FileDropzone";
 import { PageHeader } from "../../components/common/PageHeader";
-import { Spinner } from '../../components/common/Loading';
+import { Spinner } from "../../components/common/Loading";
 import { participantService } from "../../services/participantService";
 import { eventService } from "../../services/eventService";
 import type { RecruitmentEvent } from "../../types/event";
