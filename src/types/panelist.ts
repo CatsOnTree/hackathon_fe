@@ -5,4 +5,9 @@ export interface Panelist {
   domain: string;
 }
 
-export type PanelistPayload = Omit<Panelist, 'id'>;
+export interface PanelistPayload {
+  name: string;
+  email: string;
+  domain: string;
+  password: string;
+}

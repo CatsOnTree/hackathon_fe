@@ -14,9 +14,9 @@ import {
   UserRoundCheck,
   UserSearch,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { useHasRole } from "../utils/roleGuard";
+import { normalizeRole } from "../utils/roleGuard";
 
 const allNavItems = [
   {
@@ -67,17 +67,18 @@ export function MainLayout() {
   const navigate = useNavigate();
   const { role, logout } = useAuth();
 
-  // Filter navigation items based on user role
-  const getFilteredNavItems = () => {
-    const normalizeRole = (r?: string | null) => r?.replace(/^ROLE_/, "") || "";
-    const normalizedRole = normalizeRole(role);
+  const normalizedRole = useMemo(() => normalizeRole(role), [role]);
 
-    return allNavItems.filter((item) =>
-      item.roles.map(normalizeRole).includes(normalizedRole),
-    );
-  };
+  const navItems = useMemo(
+    () =>
+      allNavItems.filter((item) =>
+        item.roles
+          .map((itemRole) => normalizeRole(itemRole))
+          .includes(normalizedRole),
+      ),
+    [normalizedRole],
+  );
 
-  const navItems = getFilteredNavItems();
   const crumb =
     allNavItems.find((item) => item.to === location.pathname)?.label ||
     "Dashboard";
@@ -95,7 +96,7 @@ export function MainLayout() {
       ROLE_ADMIN: "Admin",
       ROLE_PANELIST: "Panelist",
     };
-    return roleMap[role || ""] || role || "User";
+    return roleMap[normalizedRole] || role || "User";
   };
 
   return (

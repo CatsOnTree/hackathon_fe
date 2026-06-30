@@ -12,7 +12,7 @@ interface RoleGuardProps {
  * @param requiredRoles - array of roles allowed to see content (e.g., ['ADMIN', 'PANELIST'])
  * @param fallback - what to show if user doesn't have required role (default: null)
  */
-function normalizeRole(role?: string | null) {
+export function normalizeRole(role?: string | null) {
   return role?.replace(/^ROLE_/, "") || "";
 }
 
