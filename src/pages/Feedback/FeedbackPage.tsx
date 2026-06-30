@@ -66,6 +66,15 @@ export function FeedbackPage() {
     return participants;
   }, [normalizedRole, currentPanelist, participants, assignments]);
 
+  const completedParticipantIds = useMemo(() => {
+    if (normalizedRole === "PANELIST" && currentPanelist) {
+      return feedback
+        .filter((f) => f.panelistId === currentPanelist.id)
+        .map((f) => f.participantId);
+    }
+    return [];
+  }, [normalizedRole, currentPanelist, feedback]);
+
   const onSubmit = handleSubmit(async (values) => {
     try {
       const panelistId =
@@ -152,11 +161,22 @@ export function FeedbackPage() {
               })}
             >
               <option value="">Select participant</option>
-              {filteredParticipants.map((participant) => (
-                <option key={participant.id} value={participant.id}>
-                  {participant.name}
-                </option>
-              ))}
+              {filteredParticipants.map((participant) => {
+                const isCompleted = completedParticipantIds.includes(
+                  participant.id,
+                );
+                return (
+                  <option
+                    key={participant.id}
+                    value={participant.id}
+                    disabled={isCompleted}
+                    className={isCompleted ? "text-gray-400" : ""}
+                  >
+                    {participant.name}
+                    {isCompleted ? " (Feedback Complete)" : ""}
+                  </option>
+                );
+              })}
             </select>
           </div>
           {normalizedRole === "PANELIST" && currentPanelist ? (
