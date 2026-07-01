@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { Plus, Search } from "lucide-react";
+import { Eye, EyeOff, Plus, Search } from "lucide-react";
 import { DataTable, type Column } from "../../components/common/DataTable";
 import { Modal } from "../../components/common/Modal";
 import { PageHeader } from "../../components/common/PageHeader";
@@ -19,6 +19,7 @@ export function PanelistsPage() {
   });
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const {
     register,
     reset,
@@ -120,11 +121,25 @@ export function PanelistsPage() {
           </div>
           <div>
             <label className="label">Password</label>
-            <input
-              type="password"
-              className="input"
-              {...register("password", { required: "Password is required" })}
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                className="input pr-10"
+                {...register("password", { required: "Password is required" })}
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-700"
+                onClick={() => setShowPassword((value) => !value)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
             {errors.password ? (
               <p className="mt-1 text-xs text-rose-600">
                 {errors.password.message}
