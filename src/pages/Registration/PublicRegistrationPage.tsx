@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { UserPlus, AlertCircle, CheckCircle } from "lucide-react";
 import { FileDropzone } from "../../components/forms/FileDropzone";
-import { PageHeader } from "../../components/common/PageHeader";
+// import { PageHeader } from "../../components/common/PageHeader";
 import { Spinner } from "../../components/common/Loading";
 import { participantService } from "../../services/participantService";
 import { eventService } from "../../services/eventService";
@@ -140,10 +140,10 @@ export function PublicRegistrationPage() {
 
   return (
     <>
-      <PageHeader
+      {/* <PageHeader
         title={event.name}
         description={event.description || "Register for this event"}
-      />
+      /> */}
       <div className="mx-auto max-w-3xl p-6">
         {successMessage && (
           <div className="mb-6 flex items-start gap-4 rounded-lg bg-green-50 p-4 border border-green-200">

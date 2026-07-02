@@ -1,4 +1,9 @@
-export type ParticipantStatus = 'REGISTERED' | 'CHECKED_IN' | 'ASSIGNED' | 'SELECTED' | 'REJECTED';
+export type ParticipantStatus =
+  | "REGISTERED"
+  | "CHECKED_IN"
+  | "ASSIGNED"
+  | "SELECTED"
+  | "REJECTED";
 
 export interface Participant {
   id: number;
@@ -12,6 +17,7 @@ export interface Participant {
   aiScore?: number;
   resumeUrl?: string | null;
   photoUrl?: string | null;
+  resumeAnalysisJson?: string | null;
   status: ParticipantStatus;
 }
 

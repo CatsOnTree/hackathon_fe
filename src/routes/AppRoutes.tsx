@@ -6,6 +6,7 @@ import { EventsPage } from "../pages/Events/EventsPage";
 import { RegistrationPage } from "../pages/Registration/RegistrationPage";
 import { PublicRegistrationPage } from "../pages/Registration/PublicRegistrationPage";
 import { ParticipantsPage } from "../pages/Participants/ParticipantsPage";
+import { ParticipantProfilePage } from "../pages/Participants/ParticipantProfilePage";
 import { AttendancePage } from "../pages/Attendance/AttendancePage";
 import { PanelistsPage } from "../pages/Panelists/PanelistsPage";
 import { AssignmentsPage } from "../pages/Assignments/AssignmentsPage";
@@ -70,6 +71,15 @@ export function AppRoutes() {
             element={
               <ProtectedRoute
                 component={ParticipantsPage}
+                requiredRoles={["ADMIN", "PANELIST"]}
+              />
+            }
+          />
+          <Route
+            path="participants/:id"
+            element={
+              <ProtectedRoute
+                component={ParticipantProfilePage}
                 requiredRoles={["ADMIN", "PANELIST"]}
               />
             }
