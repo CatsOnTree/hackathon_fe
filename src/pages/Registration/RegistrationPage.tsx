@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { CheckCircle, UserPlus } from "lucide-react";
 import { FileDropzone } from "../../components/forms/FileDropzone";
 import { PageHeader } from "../../components/common/PageHeader";
+import { Spinner } from "../../components/common/Loading";
+import { adminRegistrationQuotes } from "../../config/quotes";
 import { useEvents } from "../../hooks/useEvents";
 import { useRegisterParticipant } from "../../hooks/useParticipants";
 import type {
@@ -27,6 +29,16 @@ export function RegistrationPage() {
     useState<Participant | null>(null);
   const resumeFile = watch("resume")?.[0];
   const photoFile = watch("photo")?.[0];
+  const [quoteIndex, setQuoteIndex] = useState(0);
+
+  useEffect(() => {
+    if (!registerParticipant.isPending) return;
+    const id = setInterval(
+      () => setQuoteIndex((i) => (i + 1) % adminRegistrationQuotes.length),
+      3000,
+    );
+    return () => clearInterval(id);
+  }, [registerParticipant.isPending]);
 
   const onSubmit = handleSubmit(async (values) => {
     try {
@@ -77,6 +89,21 @@ export function RegistrationPage() {
           </div>
         </div>
       </>
+    );
+  }
+
+  if (registerParticipant.isPending) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+        <div className="surface max-w-2xl w-full p-8 rounded-lg shadow-lg text-center">
+          <div className="mx-auto mb-4">
+            <Spinner label="Registering participant..." />
+          </div>
+          <p className="mt-4 text-sm text-slate-600">
+            {adminRegistrationQuotes[quoteIndex]}
+          </p>
+        </div>
+      </div>
     );
   }
 

@@ -13,6 +13,7 @@ import type {
   Participant,
   ParticipantRegistrationPayload,
 } from "../../types/participant";
+import { publicRegistrationQuotes } from "../../config/quotes";
 import { getApiErrorMessage } from "../../utils/api";
 
 export function PublicRegistrationPage() {
@@ -24,6 +25,17 @@ export function PublicRegistrationPage() {
   const [submitting, setSubmitting] = useState(false);
   const [registeredParticipant, setRegisteredParticipant] =
     useState<Participant | null>(null);
+
+  const [quoteIndex, setQuoteIndex] = useState(0);
+
+  useEffect(() => {
+    if (!submitting) return;
+    const id = setInterval(
+      () => setQuoteIndex((i) => (i + 1) % publicRegistrationQuotes.length),
+      3000,
+    );
+    return () => clearInterval(id);
+  }, [submitting]);
 
   const {
     register,
@@ -167,6 +179,21 @@ export function PublicRegistrationPage() {
           >
             Register Another Participant
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (submitting) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+        <div className="surface max-w-2xl w-full p-8 rounded-lg shadow-lg text-center">
+          <div className="flex items-center justify-center w-16 h-16 mx-auto bg-white rounded-full mb-4">
+            <Spinner label="Registering..." />
+          </div>
+          <p className="mt-4 text-sm text-slate-600">
+            {publicRegistrationQuotes[quoteIndex]}
+          </p>
         </div>
       </div>
     );
