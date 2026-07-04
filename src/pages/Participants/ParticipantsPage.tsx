@@ -7,6 +7,7 @@ import { DataTable, type Column } from "../../components/common/DataTable";
 import { Modal } from "../../components/common/Modal";
 import toast from "react-hot-toast";
 import { PageHeader } from "../../components/common/PageHeader";
+import { useEvents } from "../../hooks/useEvents";
 import { useParticipants } from "../../hooks/useParticipants";
 import { participantService } from "../../services/participantService";
 import type { Participant } from "../../types/participant";
@@ -19,8 +20,12 @@ const pageSize = 8;
 export function ParticipantsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data = [], isLoading } = useParticipants();
   const [query, setQuery] = useState("");
+  const [selectedEventId, setSelectedEventId] = useState("");
+  const { data: events = [] } = useEvents();
+  const { data = [], isLoading } = useParticipants(
+    selectedEventId ? Number(selectedEventId) : undefined,
+  );
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState("participantCode");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
@@ -170,15 +175,15 @@ export function ParticipantsPage() {
 
   const filtered = useMemo(() => {
     const lowered = query.toLowerCase();
-    const base = data.filter((item) =>
-      [
+    const base = data.filter((item) => {
+      return [
         item.participantCode,
         item.name,
         item.email,
         item.skills,
         item.status,
-      ].some((value) => value?.toLowerCase().includes(lowered)),
-    );
+      ].some((value) => value?.toLowerCase().includes(lowered));
+    });
     const column = columns.find((item) => item.key === sortKey);
     const sorted = [...base].sort((a, b) => {
       const av = column?.sortValue?.(a) ?? "";
@@ -207,20 +212,44 @@ export function ParticipantsPage() {
         title="Participants"
         description="Search, sort, inspect AI scores, and open submitted files."
       />
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <label className="relative block max-w-sm flex-1">
-          <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
-          <input
-            className="input pl-9"
-            placeholder="Search participants"
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setPage(1);
-            }}
-          />
-        </label>
-        <p className="text-sm text-zinc-500">{filtered.length} participants</p>
+      <div className="mb-4 grid gap-3 xl:grid-cols-[minmax(420px,1fr)_auto] xl:items-end">
+        <div className="grid gap-3 sm:grid-cols-[minmax(320px,1fr)_minmax(220px,280px)] items-end">
+          <label className="relative block w-full">
+            <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
+            <input
+              className="input w-full pl-9"
+              placeholder="Search participants"
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setPage(1);
+              }}
+            />
+          </label>
+          <label className="block w-full">
+            <span className="mb-1 block text-sm text-zinc-600">
+              Filter by event
+            </span>
+            <select
+              className="input w-full"
+              value={selectedEventId}
+              onChange={(event) => {
+                setSelectedEventId(event.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">All events</option>
+              {events.map((event) => (
+                <option key={event.id} value={event.id}>
+                  {event.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <p className="text-sm text-zinc-500 self-end">
+          {filtered.length} participants
+        </p>
       </div>
       <DataTable
         data={pageData}
