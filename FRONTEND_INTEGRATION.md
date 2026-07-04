@@ -6,7 +6,7 @@ Purpose
 Assumptions
 - Backend base URL: http://localhost:8080
 - Frontend origin for local dev: http://localhost:3000
-- Backend uses JWT Bearer tokens for auth (returned by POST /api/auth/login)
+- Backend uses JWT Bearer tokens for auth (returned by POST /api/auth/login). Login also sets an HttpOnly `HACKATHON_AUTH` cookie so admin-only file URLs under `/uploads/**` can be opened by the browser after login.
 
 1. Authentication
 
@@ -17,14 +17,16 @@ Assumptions
 - Frontend responsibilities:
   - Store token in memory or localStorage (we recommend memory + refresh token flow; localStorage acceptable for short projects).
   - Attach Authorization header: `Authorization: Bearer <token>` for protected requests.
+  - Send login with credentials enabled so the browser stores the auth cookie.
 
 1.2 Usage
 - Include `Authorization` header for all protected endpoints.
+- Uploaded file URLs under `/uploads/**` require admin authentication. After login with credentials enabled, the browser can send the HttpOnly `HACKATHON_AUTH` cookie when opening those URLs. For fetch-based previews/downloads, either send `credentials: 'include'` or use the `Authorization: Bearer <token>` header and render the returned blob/object URL.
 - Example Axios interceptor:
 
 ```javascript
 import axios from 'axios';
-const api = axios.create({ baseURL: 'http://localhost:8080/api' });
+const api = axios.create({ baseURL: 'http://localhost:8080/api', withCredentials: true });
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
@@ -64,7 +66,7 @@ export default api;
 - Panelists
   - POST `/api/panelists` -> create panelist
   - GET `/api/panelists` -> list panelists
-  - DELETE `/api/panelists/{id}` -> delete panelist and linked user/assignment/feedback data (ADMIN)
+  - DELETE `/api/panelists/{id}` -> delete panelist, reset assigned participants to REGISTERED, and remove linked user/assignment/feedback data (ADMIN)
 
 - Assignments
   - POST `/api/assignments` -> { participantId, panelistId }
@@ -103,6 +105,7 @@ Login
 ```javascript
 const r = await fetch('http://localhost:8080/api/auth/login', {
   method: 'POST',
+  credentials: 'include',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ username, password })
 });

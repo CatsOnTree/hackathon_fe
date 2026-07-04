@@ -22,7 +22,7 @@ export default function App() {
         <BrowserRouter>
           <AuthProvider>
             <AppRoutes />
-            <Toaster position="top-right" toastOptions={{ duration: 3500 }} />
+            <Toaster position="top-center" toastOptions={{ duration: 3500 }} />
           </AuthProvider>
         </BrowserRouter>
       </QueryClientProvider>

@@ -15,7 +15,7 @@ Dates use ISO format (`YYYY-MM-DD`). Date-time values are returned as ISO local 
 | Access | Endpoints |
 | --- | --- |
 | Public | `POST /api/auth/login`, `POST /api/participants/register`, `GET /api/events`, `GET /api/events/{id}` |
-| `ROLE_ADMIN` | `POST /api/auth/register`, `POST /api/events`, `DELETE /api/events/{id}`, `DELETE /api/participants/{id}`, `/api/dashboard/**`, `/api/panelists/**`, `/api/assignments/**`, `/api/squads/**` |
+| `ROLE_ADMIN` | `POST /api/auth/register`, `POST /api/events`, `DELETE /api/events/{id}`, `DELETE /api/participants/{id}`, `/api/dashboard/**`, `/api/panelists/**`, `/api/assignments/**`, `/api/squads/**`, `/uploads/**` |
 | `ROLE_ADMIN` or `ROLE_PANELIST` | `GET /api/participants/**`, `/api/feedback/**` |
 
 ## Common Models
@@ -179,6 +179,7 @@ Response: `200 OK`
 Notes:
 
 - Use the returned `token` in the `Authorization` header for protected endpoints.
+- Login also sets an HttpOnly `HACKATHON_AUTH` cookie containing the JWT. Browser requests to admin-only file URLs under `/uploads/**` can use this cookie when the login request is made with credentials enabled.
 - Invalid credentials return `401 Unauthorized`.
 
 ### Register User
@@ -675,6 +676,7 @@ Response: `204 No Content`
 Notes:
 
 - Deleting a panelist also deletes assignments and feedback for that panelist.
+- Participants assigned to the deleted panelist are updated back to `REGISTERED` before the assignments are removed.
 - If a user account exists with the panelist email, that user account is deleted too.
 - If the panelist does not exist, the API returns `404 Not Found`.
 

@@ -558,6 +558,7 @@ Response `204 No Content`.
 Implementation details:
 
 - Returns `404 Not Found` when the panelist does not exist.
+- Updates participants assigned to the panelist back to `REGISTERED`.
 - Deletes assignments and feedback linked to the panelist.
 - Deletes the linked user account when a user exists with the panelist email.
 
@@ -856,19 +857,6 @@ If running on Java 24 with the current Mockito/Byte Buddy dependency versions, u
 ./mvnw "-DargLine=-Dnet.bytebuddy.experimental=true" test
 ```
 
-## 10. Seed Data
-
-`DataLoader` inserts demo data only when the events table is empty. It creates:
-
-- One sample event.
-- One sample participant.
-- One sample panelist.
-- One assignment.
-- One feedback record.
-- One squad and squad member.
-- One attendance record.
-- One email log.
-
 ## 11. Security and Authentication
 
 ### 11.1 Security Overview
@@ -926,8 +914,9 @@ The JWT flow is:
 1. Client POSTs credentials to `/api/auth/login`
 2. Server authenticates using `AuthenticationManager`
 3. `JwtService` issues a JWT token with username and role claims
-4. Client sends `Authorization: Bearer <token>` on protected requests
-5. `JwtAuthenticationFilter` validates the token and sets the security context
+4. Login returns the JWT in the response body and sets the same JWT in an HttpOnly `HACKATHON_AUTH` cookie
+5. Client sends `Authorization: Bearer <token>` on protected API requests, or the browser sends the cookie for admin-only file URLs such as `/uploads/**`
+6. `JwtAuthenticationFilter` validates the bearer token or cookie token and sets the security context
 
 ### 11.5 Auth Endpoints
 
@@ -1003,6 +992,7 @@ This endpoint requires `ROLE_ADMIN`.
 - `/api/panelists/**`
 - `/api/assignments/**`
 - `/api/squads/**`
+- `/uploads/**`
 - `POST /api/events`
 - `PUT /api/events/**`
 - `DELETE /api/events/**`
