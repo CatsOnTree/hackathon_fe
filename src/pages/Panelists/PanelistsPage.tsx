@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { Eye, EyeOff, Plus, Search } from "lucide-react";
+import { Eye, EyeOff, Plus, Search, Trash2 } from "lucide-react";
 import { DataTable, type Column } from "../../components/common/DataTable";
 import { Modal } from "../../components/common/Modal";
 import { PageHeader } from "../../components/common/PageHeader";
@@ -20,6 +20,10 @@ export function PanelistsPage() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [deletingPanelist, setDeletingPanelist] = useState<Panelist | null>(
+    null,
+  );
+  const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
   const {
     register,
     reset,
@@ -39,6 +43,25 @@ export function PanelistsPage() {
       ),
     [data, query],
   );
+  const confirmDelete = async () => {
+    if (!deletingPanelist) return;
+    if (deleteStep === 1) {
+      setDeleteStep(2);
+      return;
+    }
+
+    try {
+      await panelistService.delete(deletingPanelist.id);
+      toast.success("Panelist deleted");
+      setDeletingPanelist(null);
+      setDeleteStep(1);
+      queryClient.invalidateQueries({ queryKey: ["panelists"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
+    }
+  };
+
   const columns: Column<Panelist>[] = [
     {
       key: "name",
@@ -49,6 +72,23 @@ export function PanelistsPage() {
     },
     { key: "email", header: "Email", render: (row) => row.email },
     { key: "domain", header: "Domain", render: (row) => row.domain },
+    {
+      key: "actions",
+      header: "Actions",
+      render: (row) => (
+        <button
+          className="btn-secondary h-9 w-9 p-0 text-rose-600 hover:text-rose-700"
+          onClick={(event) => {
+            event.stopPropagation();
+            setDeletingPanelist(row);
+            setDeleteStep(1);
+          }}
+          aria-label="Delete panelist"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      ),
+    },
   ];
 
   const onSubmit = handleSubmit(async (values) => {
@@ -90,6 +130,44 @@ export function PanelistsPage() {
         isLoading={isLoading}
         emptyTitle="No panelists found"
       />
+      <Modal
+        title={
+          deleteStep === 1 ? "Delete panelist?" : "Are you absolutely sure?"
+        }
+        open={Boolean(deletingPanelist)}
+        onClose={() => {
+          setDeletingPanelist(null);
+          setDeleteStep(1);
+        }}
+      >
+        {deletingPanelist ? (
+          <div className="space-y-4">
+            <p className="text-sm text-zinc-600">
+              {deleteStep === 1
+                ? `This will permanently delete ${deletingPanelist.name} (${deletingPanelist.email}) and linked records.`
+                : "This action cannot be undone. Do you want to continue?"}
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                className="btn-secondary"
+                onClick={() => {
+                  setDeletingPanelist(null);
+                  setDeleteStep(1);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn-primary bg-rose-600 hover:bg-rose-700"
+                onClick={confirmDelete}
+              >
+                {deleteStep === 1 ? "Yes, delete" : "Yes, delete permanently"}
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </Modal>
+
       <Modal title="Create Panelist" open={open} onClose={() => setOpen(false)}>
         <form onSubmit={onSubmit} className="space-y-4">
           <div>

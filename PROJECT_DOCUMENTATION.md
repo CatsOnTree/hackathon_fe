@@ -148,7 +148,10 @@ Common status codes:
 
 - `200 OK` for successful reads.
 - `201 Created` for successful creates.
+- `204 No Content` for successful deletes.
 - `400 Bad Request` for validation errors or invalid actions.
+- `401 Unauthorized` when a protected endpoint is called without a valid token.
+- `403 Forbidden` when the authenticated user does not have the required role.
 - `404 Not Found` when an entity does not exist.
 - `500 Internal Server Error` for unexpected errors.
 
@@ -255,6 +258,24 @@ Response `200 OK`:
   "qrCodeUrl": "/uploads/qrcodes/uuid-registration.png"
 }
 ```
+
+#### Delete Event
+
+```http
+DELETE /api/events/{id}
+Authorization: Bearer <admin-token>
+```
+
+Access: `ROLE_ADMIN`
+
+Response `204 No Content`.
+
+Implementation details:
+
+- Returns `404 Not Found` when the event does not exist.
+- Deletes squads for the event and their squad member rows.
+- Deletes participants registered for the event.
+- Deletes dependent participant records before deleting those participants: assignments, attendance, feedback, and squad memberships.
 
 ### 7.2 Participants
 
@@ -420,6 +441,22 @@ Response `200 OK`:
 ]
 ```
 
+#### Delete Participant
+
+```http
+DELETE /api/participants/{id}
+Authorization: Bearer <admin-token>
+```
+
+Access: `ROLE_ADMIN`
+
+Response `204 No Content`.
+
+Implementation details:
+
+- Returns `404 Not Found` when the participant does not exist.
+- Deletes dependent records before deleting the participant: assignments, attendance, feedback, and squad memberships.
+
 ### 7.3 Attendance
 
 #### Participant Check-In
@@ -506,6 +543,23 @@ Response `200 OK`:
   }
 ]
 ```
+
+#### Delete Panelist
+
+```http
+DELETE /api/panelists/{id}
+Authorization: Bearer <admin-token>
+```
+
+Access: `ROLE_ADMIN`
+
+Response `204 No Content`.
+
+Implementation details:
+
+- Returns `404 Not Found` when the panelist does not exist.
+- Deletes assignments and feedback linked to the panelist.
+- Deletes the linked user account when a user exists with the panelist email.
 
 ### 7.5 Assignments
 
@@ -721,6 +775,23 @@ Response `200 OK`:
   }
 ]
 ```
+
+#### Delete Squad
+
+```http
+DELETE /api/squads/{id}
+Authorization: Bearer <admin-token>
+```
+
+Access: `ROLE_ADMIN`
+
+Response `204 No Content`.
+
+Implementation details:
+
+- Returns `404 Not Found` when the squad does not exist.
+- Deletes squad member rows for the squad.
+- Does not delete participant records.
 
 ### 7.8 Dashboard
 
@@ -1006,5 +1077,71 @@ To test login and a protected route:
    ```
 
 To test panelist access, create a panelist user with admin credentials and use their token for feedback or participant views.
+
+## 12. CORS Configuration
+
+### 12.1 CORS Overview
+
+Cross-Origin Resource Sharing (CORS) is configured to allow requests from frontend applications running on different origins.
+
+The CORS configuration is implemented in `CorsConfig` and integrated into the Spring Security filter chain via `SecurityConfig`.
+
+### 12.2 Allowed Origins
+
+The backend allows requests from:
+- `http://localhost:5173` (Vite dev server, primary frontend dev origin)
+- `http://127.0.0.1:5173` (Vite loopback alternative)
+- `http://localhost:3000` (alternative frontend dev origin)
+- `http://localhost:3001` (alternative dev origin)
+
+To add production origins, update the `CorsConfig.corsConfigurationSource()` method:
+
+```java
+configuration.addAllowedOrigin("https://yourdomain.com");
+```
+
+### 12.3 Allowed Methods and Headers
+
+The backend allows:
+- Methods: `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`, `PATCH`
+- Headers: `*` (all), with explicit support for `Authorization` and `Content-Type`
+- Credentials: enabled (for cookie-based or token-based auth)
+
+### 12.4 CORS Preflight Requests
+
+- Preflight requests (`OPTIONS`) are cached for 3600 seconds (1 hour).
+- This reduces redundant preflight requests during active frontend sessions.
+
+### 12.5 Frontend Integration with CORS
+
+Frontends can make requests to the backend without CORS errors:
+
+```javascript
+// Example: Fetch with Bearer token
+fetch('http://localhost:8080/api/dashboard/summary', {
+  method: 'GET',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+```
+
+Axios users can configure an interceptor to automatically attach the JWT token (as shown in `FRONTEND_INTEGRATION.md`).
+
+### 12.6 CORS Configuration Files
+
+Files:
+- `com.hackathon.config.CorsConfig` - CORS bean definition
+- `com.hackathon.config.SecurityConfig` - CORS integration into Spring Security filter chain
+
+No XML configuration or properties file changes are required; CORS is implemented entirely via Spring beans.
+
+### 12.7 Notes on Security and CORS
+
+- CORS does not bypass authentication or authorization; it only allows cross-origin requests.
+- All endpoints still enforce role-based authorization via `@PreAuthorize` and `SecurityFilterChain`.
+- The JWT token is required for protected endpoints, regardless of CORS settings.
+- Token must be sent in the `Authorization: Bearer <token>` header.
 
 This makes the dashboard and list endpoints useful immediately after the first startup.

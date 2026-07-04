@@ -34,10 +34,12 @@ export default api;
 ```
 
 2. CORS
-- Backend should allow `http://localhost:3000` origin during development.
-- Allow methods: GET, POST, PUT, DELETE, OPTIONS
-- Allow credentials when using cookies or cookie-based auth.
-- Our backend CORS is implemented in `CorsConfig` allowing `http://localhost:3000`. If frontend is served from another origin, update `CorsConfig` accordingly.
+- Backend allows `http://localhost:5173` (Vite dev server), `http://localhost:3000`, `http://localhost:3001`, and `http://127.0.0.1:5173` origins during development.
+- Allow methods: GET, POST, PUT, DELETE, OPTIONS, PATCH
+- Allow credentials when using cookies or token-based auth.
+- Backend CORS is implemented in `CorsConfig` and integrated into Spring Security.
+- To add production origins, update `CorsConfig.corsConfigurationSource()` in the backend.
+- Preflight requests are cached for 1 hour to reduce overhead.
 
 3. Endpoints mapping (Frontend pages → backend endpoints)
 
@@ -47,12 +49,14 @@ export default api;
 - Events
   - GET `/api/events` -> list events
   - GET `/api/events/{id}` -> event details
-  - POST `/api/events` -> create event (ADMIN/PANELIST)
+  - POST `/api/events` -> create event (ADMIN)
+  - DELETE `/api/events/{id}` -> delete event and related event data (ADMIN)
 
 - Participants (registration page)
   - POST `/api/participants/register` -> register participant (multipart/form-data or JSON)
   - GET `/api/participants` -> list participants
   - GET `/api/participants/event/{eventId}` -> participants by event
+  - DELETE `/api/participants/{id}` -> delete participant and related participant data (ADMIN)
 
 - Attendance (check-in)
   - POST `/api/attendance/check-in` -> { participantCode }
@@ -60,6 +64,7 @@ export default api;
 - Panelists
   - POST `/api/panelists` -> create panelist
   - GET `/api/panelists` -> list panelists
+  - DELETE `/api/panelists/{id}` -> delete panelist and linked user/assignment/feedback data (ADMIN)
 
 - Assignments
   - POST `/api/assignments` -> { participantId, panelistId }
@@ -74,6 +79,7 @@ export default api;
   - POST `/api/squads/{squadId}/members/{participantId}` -> add member
   - GET `/api/squads/event/{eventId}`
   - GET `/api/squads/{squadId}/members`
+  - DELETE `/api/squads/{id}` -> delete squad and squad membership rows (ADMIN)
 
 4. Request and response shapes
 - Use shapes from PROJECT_DOCUMENTATION_BACKENED.md for each endpoint. Keep backend responses consistent with those shapes.

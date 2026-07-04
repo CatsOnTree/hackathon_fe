@@ -1,25 +1,33 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, FileText, ImageIcon, Search } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Eye, FileText, ImageIcon, Search, Trash2 } from "lucide-react";
 import { Badge } from "../../components/common/Badge";
 import { DataTable, type Column } from "../../components/common/DataTable";
 import { Modal } from "../../components/common/Modal";
+import toast from "react-hot-toast";
 import { PageHeader } from "../../components/common/PageHeader";
 import { useParticipants } from "../../hooks/useParticipants";
+import { participantService } from "../../services/participantService";
 import type { Participant } from "../../types/participant";
-import { assetUrl } from "../../utils/api";
+import { assetUrl, getApiErrorMessage } from "../../utils/api";
 import { statusTone } from "../../utils/status";
+import { RoleGuard } from "../../utils/roleGuard";
 
 const pageSize = 8;
 
 export function ParticipantsPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data = [], isLoading } = useParticipants();
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState("participantCode");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [selected, setSelected] = useState<Participant | null>(null);
+  const [deletingParticipant, setDeletingParticipant] =
+    useState<Participant | null>(null);
+  const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
 
   const columns: Column<Participant>[] = useMemo(
     () => [
@@ -103,19 +111,34 @@ export function ParticipantsPage() {
           ),
       },
       {
-        key: "view",
-        header: "View",
+        key: "actions",
+        header: "Actions",
         render: (row) => (
-          <button
-            className="btn-secondary h-9 w-9 p-0"
-            onClick={(event) => {
-              event.stopPropagation();
-              setSelected(row);
-            }}
-            aria-label="View participant"
-          >
-            <Eye className="h-4 w-4" />
-          </button>
+          <div className="flex gap-2">
+            <button
+              className="btn-secondary h-9 w-9 p-0"
+              onClick={(event) => {
+                event.stopPropagation();
+                setSelected(row);
+              }}
+              aria-label="View participant"
+            >
+              <Eye className="h-4 w-4" />
+            </button>
+            <RoleGuard requiredRoles={["ADMIN"]}>
+              <button
+                className="btn-secondary h-9 w-9 p-0 text-rose-600 hover:text-rose-700"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setDeletingParticipant(row);
+                  setDeleteStep(1);
+                }}
+                aria-label="Delete participant"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </RoleGuard>
+          </div>
         ),
       },
     ],
@@ -124,6 +147,25 @@ export function ParticipantsPage() {
 
   const handleRowClick = (row: Participant) => {
     navigate(`/participants/${row.id}`);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingParticipant) return;
+    if (deleteStep === 1) {
+      setDeleteStep(2);
+      return;
+    }
+
+    try {
+      await participantService.delete(deletingParticipant.id);
+      toast.success("Participant deleted");
+      setDeletingParticipant(null);
+      setDeleteStep(1);
+      queryClient.invalidateQueries({ queryKey: ["participants"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
+    }
   };
 
   const filtered = useMemo(() => {
@@ -209,6 +251,44 @@ export function ParticipantsPage() {
           Next
         </button>
       </div>
+      <Modal
+        title={
+          deleteStep === 1 ? "Delete participant?" : "Are you absolutely sure?"
+        }
+        open={Boolean(deletingParticipant)}
+        onClose={() => {
+          setDeletingParticipant(null);
+          setDeleteStep(1);
+        }}
+      >
+        {deletingParticipant ? (
+          <div className="space-y-4">
+            <p className="text-sm text-zinc-600">
+              {deleteStep === 1
+                ? `This will permanently delete ${deletingParticipant.name} (${deletingParticipant.participantCode}) and related records.`
+                : "This action cannot be undone. Do you want to continue?"}
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                className="btn-secondary"
+                onClick={() => {
+                  setDeletingParticipant(null);
+                  setDeleteStep(1);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn-primary bg-rose-600 hover:bg-rose-700"
+                onClick={confirmDelete}
+              >
+                {deleteStep === 1 ? "Yes, delete" : "Yes, delete permanently"}
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </Modal>
+
       <Modal
         title="Participant Details"
         open={Boolean(selected)}

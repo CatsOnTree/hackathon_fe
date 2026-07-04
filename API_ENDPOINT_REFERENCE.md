@@ -15,7 +15,7 @@ Dates use ISO format (`YYYY-MM-DD`). Date-time values are returned as ISO local 
 | Access | Endpoints |
 | --- | --- |
 | Public | `POST /api/auth/login`, `POST /api/participants/register`, `GET /api/events`, `GET /api/events/{id}` |
-| `ROLE_ADMIN` | `POST /api/auth/register`, `POST /api/events`, `/api/dashboard/**`, `/api/panelists/**`, `/api/assignments/**`, `/api/squads/**` |
+| `ROLE_ADMIN` | `POST /api/auth/register`, `POST /api/events`, `DELETE /api/events/{id}`, `DELETE /api/participants/{id}`, `/api/dashboard/**`, `/api/panelists/**`, `/api/assignments/**`, `/api/squads/**` |
 | `ROLE_ADMIN` or `ROLE_PANELIST` | `GET /api/participants/**`, `/api/feedback/**` |
 
 ## Common Models
@@ -315,6 +315,27 @@ Response: `200 OK`
 }
 ```
 
+### Delete Event
+
+`DELETE /api/events/{id}`
+
+Access: `ROLE_ADMIN`
+
+Path parameters:
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | number | Yes | Event ID |
+
+Request: No request body.
+
+Response: `204 No Content`
+
+Notes:
+
+- Deleting an event also deletes squads for that event, squad memberships, participants for that event, and dependent participant records such as assignments, attendance, and feedback.
+- If the event does not exist, the API returns `404 Not Found`.
+
 ## Participant Endpoints
 
 ### Register Participant - JSON
@@ -515,6 +536,27 @@ Response: `200 OK`
 ]
 ```
 
+### Delete Participant
+
+`DELETE /api/participants/{id}`
+
+Access: `ROLE_ADMIN`
+
+Path parameters:
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | number | Yes | Participant ID |
+
+Request: No request body.
+
+Response: `204 No Content`
+
+Notes:
+
+- Deleting a participant also deletes their assignments, attendance, feedback, and squad memberships.
+- If the participant does not exist, the API returns `404 Not Found`.
+
 ## Attendance Endpoints
 
 ### Check In Participant
@@ -613,6 +655,28 @@ Response: `200 OK`
   }
 ]
 ```
+
+### Delete Panelist
+
+`DELETE /api/panelists/{id}`
+
+Access: `ROLE_ADMIN`
+
+Path parameters:
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | number | Yes | Panelist ID |
+
+Request: No request body.
+
+Response: `204 No Content`
+
+Notes:
+
+- Deleting a panelist also deletes assignments and feedback for that panelist.
+- If a user account exists with the panelist email, that user account is deleted too.
+- If the panelist does not exist, the API returns `404 Not Found`.
 
 ## Assignment Endpoints
 
@@ -867,6 +931,28 @@ Response: `200 OK`
   }
 ]
 ```
+
+### Delete Squad
+
+`DELETE /api/squads/{id}`
+
+Access: `ROLE_ADMIN`
+
+Path parameters:
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | number | Yes | Squad ID |
+
+Request: No request body.
+
+Response: `204 No Content`
+
+Notes:
+
+- Deleting a squad also deletes its squad membership rows.
+- Participants are not deleted when only a squad is deleted.
+- If the squad does not exist, the API returns `404 Not Found`.
 
 ## Dashboard Endpoints
 

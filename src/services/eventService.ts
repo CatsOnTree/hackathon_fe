@@ -1,9 +1,9 @@
-import { api } from './axios';
-import type { EventPayload, RecruitmentEvent } from '../types/event';
+import { api } from "./axios";
+import type { EventPayload, RecruitmentEvent } from "../types/event";
 
 export const eventService = {
   async list() {
-    const { data } = await api.get<RecruitmentEvent[]>('/api/events');
+    const { data } = await api.get<RecruitmentEvent[]>("/api/events");
     return data;
   },
   async get(id: number) {
@@ -11,7 +11,10 @@ export const eventService = {
     return data;
   },
   async create(payload: EventPayload) {
-    const { data } = await api.post<RecruitmentEvent>('/api/events', payload);
+    const { data } = await api.post<RecruitmentEvent>("/api/events", payload);
     return data;
+  },
+  async delete(id: number) {
+    await api.delete(`/api/events/${id}`);
   },
 };
