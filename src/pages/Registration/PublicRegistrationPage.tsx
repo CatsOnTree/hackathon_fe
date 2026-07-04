@@ -9,7 +9,10 @@ import { Spinner } from "../../components/common/Loading";
 import { participantService } from "../../services/participantService";
 import { eventService } from "../../services/eventService";
 import type { RecruitmentEvent } from "../../types/event";
-import type { ParticipantRegistrationPayload } from "../../types/participant";
+import type {
+  Participant,
+  ParticipantRegistrationPayload,
+} from "../../types/participant";
 import { getApiErrorMessage } from "../../utils/api";
 
 export function PublicRegistrationPage() {
@@ -19,7 +22,8 @@ export function PublicRegistrationPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [registeredParticipant, setRegisteredParticipant] =
+    useState<Participant | null>(null);
 
   const {
     register,
@@ -68,13 +72,8 @@ export function PublicRegistrationPage() {
         experienceYears: Number(values.experienceYears || 0),
       });
 
-      setSuccessMessage(
-        `Successfully registered! Your participant code is: ${participant.participantCode}`,
-      );
+      setRegisteredParticipant(participant);
       reset();
-      setTimeout(() => {
-        setSuccessMessage(null);
-      }, 5000);
       toast.success("Registration successful!");
     } catch (err) {
       toast.error(getApiErrorMessage(err));
@@ -138,6 +137,41 @@ export function PublicRegistrationPage() {
     );
   }
 
+  if (registeredParticipant) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+        <div className="surface max-w-2xl w-full p-8 rounded-lg shadow-lg text-center">
+          <div className="flex items-center justify-center w-16 h-16 mx-auto bg-green-100 rounded-full mb-6">
+            <CheckCircle className="h-8 w-8 text-green-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">
+            Registration Successful!
+          </h2>
+          <p className="text-slate-600 mb-4">
+            Your registration for <strong>{event.name}</strong> has been
+            completed.
+          </p>
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 mb-6">
+            <p className="text-sm text-slate-500">Participant Code</p>
+            <p className="text-2xl font-semibold text-slate-900">
+              {registeredParticipant.participantCode}
+            </p>
+          </div>
+          <p className="text-sm text-slate-600 mb-6">
+            Please check your email for further instructions and event updates.
+          </p>
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => setRegisteredParticipant(null)}
+          >
+            Register Another Participant
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       {/* <PageHeader
@@ -145,18 +179,6 @@ export function PublicRegistrationPage() {
         description={event.description || "Register for this event"}
       /> */}
       <div className="mx-auto max-w-3xl p-6">
-        {successMessage && (
-          <div className="mb-6 flex items-start gap-4 rounded-lg bg-green-50 p-4 border border-green-200">
-            <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-green-900">{successMessage}</p>
-              <p className="text-sm text-green-700 mt-1">
-                Please check your email for further instructions.
-              </p>
-            </div>
-          </div>
-        )}
-
         <form onSubmit={onSubmit} className="surface p-6">
           <div className="mb-6 pb-6 border-b border-slate-200">
             <h3 className="font-semibold text-slate-900 mb-2">{event.name}</h3>

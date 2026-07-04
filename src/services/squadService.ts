@@ -1,6 +1,6 @@
 import { api } from './axios';
 import type { Participant } from '../types/participant';
-import type { Squad, SquadMember, SquadPayload } from '../types/squad';
+import type { Squad, SquadMember, SquadPayload, SquadWithMembers } from '../types/squad';
 
 export const squadService = {
   async create(payload: SquadPayload) {
@@ -18,5 +18,27 @@ export const squadService = {
   async members(squadId: number) {
     const { data } = await api.get<Participant[]>(`/api/squads/${squadId}/members`);
     return data;
+  },
+  async squadsForParticipant(eventId: number | undefined, participantId: number) {
+    if (!eventId) return [];
+    
+    try {
+      const squads = await this.byEvent(eventId);
+      const squadsWithMembers: SquadWithMembers[] = [];
+
+      for (const squad of squads) {
+        const members = await this.members(squad.id);
+        if (members.some((member) => member.id === participantId)) {
+          squadsWithMembers.push({
+            ...squad,
+            members,
+          });
+        }
+      }
+
+      return squadsWithMembers;
+    } catch {
+      return [];
+    }
   },
 };

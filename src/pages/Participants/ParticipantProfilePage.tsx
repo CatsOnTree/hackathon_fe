@@ -281,7 +281,7 @@ export function ParticipantProfilePage() {
           </div>
 
           <ScoreBreakdownCard breakdown={breakdown} />
-          <SquadMembers />
+          <SquadMembers participantId={participant.id} eventId={participant.eventId ?? null} />
         </div>
       </div>
     </div>
