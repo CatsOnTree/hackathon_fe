@@ -3,7 +3,6 @@ import { LoginPage } from "../pages/Login/LoginPage";
 import { MainLayout } from "../layouts/MainLayout";
 import { DashboardPage } from "../pages/Dashboard/DashboardPage";
 import { EventsPage } from "../pages/Events/EventsPage";
-import { RegistrationPage } from "../pages/Registration/RegistrationPage";
 import { PublicRegistrationPage } from "../pages/Registration/PublicRegistrationPage";
 import { ParticipantsPage } from "../pages/Participants/ParticipantsPage";
 import { ParticipantProfilePage } from "../pages/Participants/ParticipantProfilePage";
@@ -53,15 +52,6 @@ export function AppRoutes() {
             element={
               <ProtectedRoute
                 component={EventsPage}
-                requiredRoles={["ADMIN"]}
-              />
-            }
-          />
-          <Route
-            path="registration"
-            element={
-              <ProtectedRoute
-                component={RegistrationPage}
                 requiredRoles={["ADMIN"]}
               />
             }

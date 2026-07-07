@@ -9,7 +9,6 @@ import {
   MessageSquare,
   Network,
   PanelLeftClose,
-  QrCode,
   Users,
   UserRoundCheck,
   UserSearch,
@@ -26,12 +25,6 @@ const allNavItems = [
     roles: ["ADMIN"],
   },
   { label: "Events", to: "/events", icon: CalendarDays, roles: ["ADMIN"] },
-  {
-    label: "Registration",
-    to: "/registration",
-    icon: QrCode,
-    roles: ["ADMIN"],
-  },
   {
     label: "Participants",
     to: "/participants",
